@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Customify - Nuevo Producto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/admin/dashboard">Customify</a>
+        <div class="d-flex align-items-center">
+            <a href="/admin/dashboard" class="btn btn-sm btn-outline-secondary me-3">Volver al Dashboard</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mb-5">
+    <div class="card glass-card p-4">
+        <h3 class="fw-bold mb-4">Crear Nuevo Producto 3D</h3>
+
+        <div id="status-alert" class="alert d-none" role="alert"></div>
+
+        <form id="productForm">
+            <h5 class="border-bottom pb-2 mb-3">Datos Básicos</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre del Producto *</label>
+                    <input type="text" id="name" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Precio Base (€) *</label>
+                    <input type="number" id="basePrice" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Archivo Modelo (GLTF/GLB) *</label>
+                    <input type="file" id="file" class="form-control" accept=".gltf,.glb" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Descripción</label>
+                <textarea id="description" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h5 class="mb-0">Opciones Personalizables</h5>
+                <button type="button" class="btn btn-sm btn-outline-dark" id="addOptionBtn">+ Añadir Opción</button>
+            </div>
+
+            <div id="optionsContainer">
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-custom px-5 py-2" id="submitBtn">Guardar Producto Completo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem('customify_token');
+    if (!token) window.location.href = '/admin/login';
+
+    const optionsContainer = document.getElementById('optionsContainer');
+    const addOptionBtn = document.getElementById('addOptionBtn');
+    const statusAlert = document.getElementById('status-alert');
+    let optionCount = 0;
+
+    // Lógica para añadir filas dinámicas de opciones
+    addOptionBtn.addEventListener('click', () => {
+        const optionId = `option_${optionCount++}`;
+        const row = document.createElement('div');
+        row.className = 'row mb-3 align-items-end bg-light p-3 rounded border option-row';
+        row.id = optionId;
+
+        row.innerHTML = `
+            <div class="col-md-3">
+                <label class="form-label small">Nombre (Ej: Color Tapizado)</label>
+                <input type="text" class="form-control opt-name" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Tipo</label>
+                <select class="form-select opt-type">
+                    <option value="COLOR">Color</option>
+                    <option value="TEXTURE">Textura</option>
+                    <option value="MATERIAL">Material</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Valor por defecto</label>
+                <input type="text" class="form-control opt-default" placeholder="#FFFFFF">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Suplemento (€)</label>
+                <input type="number" class="form-control opt-price" step="0.01" value="0">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Valores (separados por coma)</label>
+                <input type="text" class="form-control opt-choices" placeholder="#FF0000, #00FF00" required>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-danger btn-sm w-100 h-100" onclick="document.getElementById('${optionId}').remove()">X</button>
+            </div>
+        `;
+        optionsContainer.appendChild(row);
+    });
+
+    // Manejo del envío del formulario completo
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Guardando...';
+
+        statusAlert.className = 'alert alert-info';
+        statusAlert.textContent = 'Subiendo modelo 3D...';
+        statusAlert.classList.remove('d-none');
+
+        try {
+            // PASO 1: Subir el producto y el archivo
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('basePrice', document.getElementById('basePrice').value);
+            formData.append('file', document.getElementById('file').files[0]);
+
+            // Al usar FormData, fetch configura automáticamente el Content-Type a multipart/form-data
+            const prodResponse = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: formData
+            });
+
+            if (!prodResponse.ok) throw new Error('Error al guardar el producto base.');
+
+            const productData = await prodResponse.json();
+            const productId = productData.id;
+
+            // PASO 2: Recorrer y subir las opciones dinámicas
+            const optionRows = document.querySelectorAll('.option-row');
+            if (optionRows.length > 0) {
+                statusAlert.textContent = 'Configurando opciones de personalización...';
+
+                for (let row of optionRows) {
+                    const choicesString = row.querySelector('.opt-choices').value;
+                    const choicesArray = choicesString.split(',').map(s => s.trim()).filter(s => s !== '');
+
+                    const optData = {
+                        name: row.querySelector('.opt-name').value,
+                        type: row.querySelector('.opt-type').value,
+                        defaultValue: row.querySelector('.opt-default').value,
+                        priceSupplement: parseFloat(row.querySelector('.opt-price').value),
+                        choices: choicesArray
+                    };
+
+                    await fetch(`/api/products/${productId}/options`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(optData)
+                    });
+                }
+            }
+
+            statusAlert.className = 'alert alert-success';
+            statusAlert.textContent = '¡Producto creado con éxito! Redirigiendo...';
+
+            setTimeout(() => {
+                window.location.href = '/admin/dashboard';
+            }, 1500);
+
+        } catch (error) {
+            console.error(error);
+            statusAlert.className = 'alert alert-danger';
+            statusAlert.textContent = error.message || 'Ocurrió un error inesperado.';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Guardar Producto Completo';
+        }
+    });
+</script>
+</body>
+</html>
