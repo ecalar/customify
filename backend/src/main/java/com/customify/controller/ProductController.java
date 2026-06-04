@@ -67,8 +67,13 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
-            @RequestBody com.customify.dto.product.ProductUpdateRequest request,
+            @RequestParam("name") String name,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam("basePrice") BigDecimal basePrice,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             Principal principal) {
-        return ResponseEntity.ok(productService.updateProduct(id, principal.getName(), request.getName(), request.getDescription(), request.getBasePrice()));
+
+        return ResponseEntity.ok(productService.updateProduct(
+                id, principal.getName(), name, description, basePrice, file));
     }
 }

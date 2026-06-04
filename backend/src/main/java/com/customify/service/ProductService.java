@@ -152,11 +152,19 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponse updateProduct(Long id, String username, String name, String description, BigDecimal basePrice) {
+    public ProductResponse updateProduct(Long id, String username, String name, String description, BigDecimal basePrice, MultipartFile file) {
         Product product = getProductEntity(id, username);
+
         product.setName(name);
         product.setDescription(description);
         product.setBasePrice(basePrice);
+
+        // Si el usuario ha subido un archivo nuevo, lo guardamos y actualizamos la ruta
+        if (file != null && !file.isEmpty()) {
+            String newModelPath = fileStorageService.storeFile(file);
+            product.setModelPath(newModelPath);
+        }
+
         return mapToResponse(productRepository.save(product));
     }
 }

@@ -67,7 +67,7 @@
                                 <h5 class="card-title fw-bold">${p.name}</h5>
                                 <p class="card-text text-muted text-truncate">${p.description || 'Sin descripción'}</p>
                                 <p class="card-text fs-5">€${p.basePrice}</p>
-                          <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
+                            </div> <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
                                 <span class="badge ${p.active ? 'bg-success' : 'bg-secondary'} align-self-center">
                                     ${p.active ? 'Activo' : 'Inactivo'}
                                 </span>
@@ -76,8 +76,7 @@
                                     <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})">Eliminar</button>
                                 </div>
                             </div>
-                    </div>
-                `).join('');
+                        </div> </div> `).join('');
             } else if (response.status === 401 || response.status === 403) {
                 localStorage.removeItem('customify_token');
                 window.location.href = '/admin/login';

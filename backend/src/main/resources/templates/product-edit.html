@@ -34,6 +34,13 @@
                     <input type="number" id="basePrice" class="form-control" step="0.01" min="0" required>
                 </div>
             </div>
+
+            <div class="mb-3">
+                <label class="form-label">Sustituir Modelo 3D (Opcional)</label>
+                <input type="file" id="file" class="form-control" accept=".gltf,.glb">
+                <small class="text-muted">Deja este campo en blanco si quieres mantener el modelo actual.</small>
+            </div>
+
             <div class="mb-4">
                 <label class="form-label">Descripción</label>
                 <textarea id="description" class="form-control" rows="3"></textarea>
@@ -50,7 +57,6 @@
     const token = localStorage.getItem('customify_token');
     if (!token) window.location.href = '/admin/login';
 
-    // Extraer ID de la URL (/admin/products/1/edit)
     const urlParts = window.location.pathname.split('/');
     const productId = urlParts[urlParts.length - 2];
 
@@ -75,25 +81,35 @@
         }
     }
 
-    // Actualizar datos
+    // Actualizar datos con soporte para archivo (FormData)
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         document.getElementById('submitBtn').disabled = true;
 
-        const payload = {
-            name: document.getElementById('name').value,
-            basePrice: document.getElementById('basePrice').value,
-            description: document.getElementById('description').value
-        };
+        statusAlert.textContent = 'Actualizando producto...';
+        statusAlert.className = 'alert alert-info';
+        statusAlert.classList.remove('d-none');
+
+        const formData = new FormData();
+        formData.append('name', document.getElementById('name').value);
+        formData.append('basePrice', document.getElementById('basePrice').value);
+        formData.append('description', document.getElementById('description').value);
+
+        // Si el usuario ha seleccionado un archivo nuevo, lo adjuntamos
+        const fileInput = document.getElementById('file');
+        if (fileInput.files.length > 0) {
+            formData.append('file', fileInput.files[0]);
+        }
 
         try {
             const res = await fetch(`/api/products/${productId}`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
+                    'Authorization': 'Bearer ' + token
+                    // NOTA: Con FormData no ponemos el 'Content-Type'.
+                    // El navegador lo gestiona automáticamente para archivos.
                 },
-                body: JSON.stringify(payload)
+                body: formData
             });
 
             if (!res.ok) throw new Error();
