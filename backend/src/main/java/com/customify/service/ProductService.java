@@ -1,5 +1,6 @@
 package com.customify.service;
 
+import com.customify.dto.option.ProductOptionResponse;
 import com.customify.dto.product.ProductResponse;
 import com.customify.exception.ResourceNotFoundException;
 import com.customify.model.Product;
@@ -86,6 +87,67 @@ public class ProductService {
                 .basePrice(product.getBasePrice())
                 .modelPath(product.getModelPath())
                 .active(product.isActive())
+                .build();
+    }
+
+    @Transactional
+    public ProductOptionResponse addOptionToProduct(Long productId, String username, com.customify.dto.option.ProductOptionRequest request) {
+        Product product = getProductEntity(productId, username);
+
+        com.customify.model.ProductOption option = new com.customify.model.ProductOption();
+        option.setProduct(product);
+        option.setName(request.getName());
+        option.setType(request.getType());
+        option.setDefaultValue(request.getDefaultValue());
+        option.setPriceSupplement(request.getPriceSupplement() != null ? request.getPriceSupplement() : BigDecimal.ZERO);
+        option.setChoices(request.getChoices());
+
+        product.getOptions().add(option);
+        productRepository.save(product); // Cascade persistirá la opción
+
+        // Devolvemos la última opción añadida (para simplificar, mapeamos los datos de entrada al DTO de salida)
+        return mapOptionToResponse(option);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductOptionResponse> getProductOptions(Long productId, String username) {
+        Product product = getProductEntity(productId, username);
+        return product.getOptions().stream()
+                .map(this::mapOptionToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public com.customify.dto.product.PublicProductResponse getPublicProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+
+        if (!product.isActive()) {
+            throw new RuntimeException("El producto no está disponible");
+        }
+
+        List<ProductOptionResponse> options = product.getOptions().stream()
+                .map(this::mapOptionToResponse)
+                .collect(Collectors.toList());
+
+        return com.customify.dto.product.PublicProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .modelPath(product.getModelPath())
+                .basePrice(product.getBasePrice())
+                .options(options)
+                .build();
+    }
+
+    private ProductOptionResponse mapOptionToResponse(com.customify.model.ProductOption option) {
+        return ProductOptionResponse.builder()
+                .id(option.getId())
+                .name(option.getName())
+                .type(option.getType())
+                .defaultValue(option.getDefaultValue())
+                .priceSupplement(option.getPriceSupplement())
+                .choices(option.getChoices())
                 .build();
     }
 }

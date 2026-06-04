@@ -49,4 +49,18 @@ public class ProductController {
         productService.deleteProduct(id, principal.getName());
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}/options")
+    public ResponseEntity<List<com.customify.dto.option.ProductOptionResponse>> getProductOptions(
+            @PathVariable Long id, Principal principal) {
+        return ResponseEntity.ok(productService.getProductOptions(id, principal.getName()));
+    }
+
+    @PostMapping("/{id}/options")
+    public ResponseEntity<com.customify.dto.option.ProductOptionResponse> addProductOption(
+            @PathVariable Long id,
+            @RequestBody com.customify.dto.option.ProductOptionRequest request,
+            Principal principal) {
+        return new ResponseEntity<>(productService.addOptionToProduct(id, principal.getName(), request), HttpStatus.CREATED);
+    }
 }
