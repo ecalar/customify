@@ -50,23 +50,27 @@ Sigue estos pasos para levantar el proyecto en tu entorno de desarrollo local.
 ```bash
 git clone [https://github.com/tu-usuario/customify.git](https://github.com/tu-usuario/customify.git)
 cd customify
-
+```
 **2. Levantar la base de datos con Docker**
-```bash
+
 Asegúrate de tener el demonio de Docker encendido y ejecuta:
+
+```bash
 docker compose up -d
+```
 
 Esto levantará un contenedor MySQL en el puerto 3306 con la configuración esperada por la aplicación.
 
 ***3. Compilar y ejecutar el Backend***
-```bash
+
 La aplicación utiliza Flyway, por lo que las tablas de la base de datos se crearán automáticamente al arrancar.
+```bash
 cd backend
 mvn clean install
 mvn spring-boot:run
-
+```
 ***4. Probar el Visor 3D***
-```bash
+
 Para evitar bloqueos por políticas CORS del navegador (protocolo file://), sirve la carpeta frontend/viewer/ usando una extensión como Live Server en tu IDE, apuntando a http://localhost:5500/index.html?id=1.
 
 👨‍💻 Acerca del Autor
