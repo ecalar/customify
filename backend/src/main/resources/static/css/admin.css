@@ -1,0 +1,38 @@
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #2c3e50;
+}
+
+/* Efecto Glassmorphism para las tarjetas */
+.glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+}
+
+.btn-custom {
+    background-color: #2b2d42;
+    color: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-custom:hover {
+    background-color: #1a1b29;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Formularios limpios */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 12px;
+}
+.form-control:focus {
+    box-shadow: 0 0 0 3px rgba(43, 45, 66, 0.1);
+    border-color: #2b2d42;
+}
