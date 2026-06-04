@@ -1,0 +1,29 @@
+name: Customify CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build and Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven' # Acelera las compilaciones cacheando dependencias
+
+      - name: Compilar y empaquetar con Maven (Saltando tests para ganar velocidad inicial)
+        run: mvn -B package -DskipTests --file backend/pom.xml
+
+      - name: Ejecutar Tests Unitarios
+        run: mvn test --file backend/pom.xml
