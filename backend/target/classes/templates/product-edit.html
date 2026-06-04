@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Customify - Editar Producto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/admin/dashboard">Customify</a>
+        <div class="d-flex align-items-center">
+            <a href="/admin/dashboard" class="btn btn-sm btn-outline-secondary me-3">Volver al Dashboard</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mb-5">
+    <div class="card glass-card p-4">
+        <h3 class="fw-bold mb-4">Editar Producto</h3>
+
+        <div id="status-alert" class="alert d-none" role="alert"></div>
+
+        <form id="editForm">
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label class="form-label">Nombre del Producto</label>
+                    <input type="text" id="name" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Precio Base (€)</label>
+                    <input type="number" id="basePrice" class="form-control" step="0.01" min="0" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Descripción</label>
+                <textarea id="description" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-custom px-5 py-2" id="submitBtn">Actualizar Datos</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem('customify_token');
+    if (!token) window.location.href = '/admin/login';
+
+    // Extraer ID de la URL (/admin/products/1/edit)
+    const urlParts = window.location.pathname.split('/');
+    const productId = urlParts[urlParts.length - 2];
+
+    const form = document.getElementById('editForm');
+    const statusAlert = document.getElementById('status-alert');
+
+    // Cargar datos actuales
+    async function loadProductData() {
+        try {
+            const res = await fetch(`/api/products/${productId}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+
+            document.getElementById('name').value = data.name;
+            document.getElementById('basePrice').value = data.basePrice;
+            document.getElementById('description').value = data.description || '';
+        } catch (error) {
+            statusAlert.textContent = 'Error al cargar los datos del producto.';
+            statusAlert.className = 'alert alert-danger';
+        }
+    }
+
+    // Actualizar datos
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        document.getElementById('submitBtn').disabled = true;
+
+        const payload = {
+            name: document.getElementById('name').value,
+            basePrice: document.getElementById('basePrice').value,
+            description: document.getElementById('description').value
+        };
+
+        try {
+            const res = await fetch(`/api/products/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error();
+
+            statusAlert.textContent = 'Producto actualizado correctamente.';
+            statusAlert.className = 'alert alert-success';
+            setTimeout(() => window.location.href = '/admin/dashboard', 1500);
+        } catch (error) {
+            statusAlert.textContent = 'Error al actualizar el producto.';
+            statusAlert.className = 'alert alert-danger';
+            document.getElementById('submitBtn').disabled = false;
+        }
+    });
+
+    loadProductData();
+</script>
+</body>
+</html>

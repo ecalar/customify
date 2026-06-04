@@ -150,4 +150,13 @@ public class ProductService {
                 .choices(option.getChoices())
                 .build();
     }
+
+    @Transactional
+    public ProductResponse updateProduct(Long id, String username, String name, String description, BigDecimal basePrice) {
+        Product product = getProductEntity(id, username);
+        product.setName(name);
+        product.setDescription(description);
+        product.setBasePrice(basePrice);
+        return mapToResponse(productRepository.save(product));
+    }
 }

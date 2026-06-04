@@ -63,4 +63,12 @@ public class ProductController {
             Principal principal) {
         return new ResponseEntity<>(productService.addOptionToProduct(id, principal.getName(), request), HttpStatus.CREATED);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponse> updateProduct(
+            @PathVariable Long id,
+            @RequestBody com.customify.dto.product.ProductUpdateRequest request,
+            Principal principal) {
+        return ResponseEntity.ok(productService.updateProduct(id, principal.getName(), request.getName(), request.getDescription(), request.getBasePrice()));
+    }
 }

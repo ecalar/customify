@@ -22,4 +22,9 @@ public class AdminController {
     public String newProduct() {
         return "product-form";
     }
+
+    @GetMapping("/products/{id}/edit")
+    public String editProduct() {
+        return "product-edit";
+    }
 }

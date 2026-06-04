@@ -93,6 +93,14 @@ async function initViewer() {
     }
 }
 
+function parseChoice(choiceStr) {
+    if (choiceStr.includes(':')) {
+        const parts = choiceStr.split(':');
+        return { name: parts[0].trim(), value: parts[1].trim() };
+    }
+    return { name: choiceStr, value: choiceStr };
+}
+
 function buildOptionsUI() {
     if (!productData.options || productData.options.length === 0) {
         optionsContainer.innerHTML = '<p class="text-sm text-muted">Este producto no tiene opciones personalizables.</p>';
@@ -101,8 +109,8 @@ function buildOptionsUI() {
     }
 
     productData.options.forEach(option => {
-        // Guardamos el valor por defecto en el estado
-        currentConfiguration[option.name] = option.defaultValue || option.choices[0];
+        const defaultChoice = option.defaultValue || option.choices[0];
+        currentConfiguration[option.name] = parseChoice(defaultChoice).value;
 
         const groupDiv = document.createElement('div');
         groupDiv.className = 'option-group';
@@ -115,12 +123,18 @@ function buildOptionsUI() {
         select.dataset.optionName = option.name;
         select.dataset.price = option.priceSupplement;
         select.dataset.type = option.type;
+        // Guardamos el valor por defecto para el cálculo de precios
+        select.dataset.default = parseChoice(defaultChoice).value;
 
-        option.choices.forEach(choice => {
+        option.choices.forEach(choiceStr => {
+            const parsed = parseChoice(choiceStr);
             const optElement = document.createElement('option');
-            optElement.value = choice;
-            optElement.textContent = choice;
-            if (choice === currentConfiguration[option.name]) optElement.selected = true;
+            optElement.value = parsed.value;
+            optElement.textContent = parsed.name; // Muestra "Rojo" en lugar del hex
+
+            if (parsed.value === currentConfiguration[option.name]) {
+                optElement.selected = true;
+            }
             select.appendChild(optElement);
         });
 
@@ -146,14 +160,15 @@ function buildOptionsUI() {
 function updatePrice() {
     let total = basePrice;
 
-    // Sumar suplementos de opciones que no tengan su valor por defecto inicial
     const selects = document.querySelectorAll('#options-container select');
     selects.forEach(select => {
-        // Lógica simplificada: si la opción seleccionada tiene suplemento > 0, se suma.
-        // En una app real, el suplemento podría ir por cada choice individual.
-        // Aquí asumimos que activar la opción aplica el suplemento global de la opción.
         const priceSup = parseFloat(select.dataset.price);
-        if (priceSup > 0) total += priceSup;
+        const defaultValue = select.dataset.default;
+
+        // ¡Magia aquí! Solo suma el precio si el valor actual NO es el de por defecto
+        if (priceSup > 0 && select.value !== defaultValue) {
+            total += priceSup;
+        }
     });
 
     document.getElementById('total-price').textContent = `${total.toFixed(2)} €`;
