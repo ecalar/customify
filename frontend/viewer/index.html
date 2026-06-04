@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customify - Configurador 3D</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.168.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.168.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+<div id="viewer-container">
+    <div id="loading-spinner">Cargando modelo 3D...</div>
+</div>
+
+<div id="sidebar" class="glass-panel">
+    <h2 id="product-name">Cargando...</h2>
+    <p id="product-description" class="text-sm"></p>
+
+    <div class="divider"></div>
+
+    <div id="options-container">
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="price-container">
+        <span>Total:</span>
+        <span id="total-price">0.00 €</span>
+    </div>
+    <button id="save-config" class="btn-primary" disabled>Guardar configuración</button>
+
+    <div id="status-msg" class="hidden"></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
